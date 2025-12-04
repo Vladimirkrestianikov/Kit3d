@@ -47,6 +47,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
+            position: relative;
         }
 
         .logo h2 {
@@ -62,29 +63,66 @@
             color: #4CAF50; /* зеленый */
         }
 
-        .nav-links {
+        /* Гамбургер меню для мобильных */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -8px);
+        }
+
+        /* Основное меню */
+        .nav-menu {
             display: flex;
+            align-items: center;
             list-style: none;
             margin-bottom: 0;
         }
 
-        .nav-links li {
+        .nav-menu li {
             margin-left: 30px;
         }
 
-        .nav-links a {
+        .nav-menu a {
             text-decoration: none;
             color: #333;
             font-weight: 500;
             transition: color 0.3s;
             position: relative;
+            display: inline-block;
+            padding: 5px 0;
         }
 
-        .nav-links a:hover, .nav-links a.active {
+        .nav-menu a:hover, .nav-menu a.active {
             color: #FF6B35;
         }
 
-        .nav-links a.active::after {
+        .nav-menu a.active::after {
             content: '';
             position: absolute;
             bottom: -5px;
@@ -92,6 +130,76 @@
             width: 100%;
             height: 2px;
             background-color: #FF6B35;
+        }
+
+        /* Мобильное меню */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            padding: 80px 30px 30px;
+            transition: right 0.4s ease;
+            z-index: 999;
+            overflow-y: auto;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-menu li {
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu.active li {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .mobile-menu li:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-menu li:nth-child(2) { transition-delay: 0.15s; }
+        .mobile-menu li:nth-child(3) { transition-delay: 0.2s; }
+        .mobile-menu li:nth-child(4) { transition-delay: 0.25s; }
+        .mobile-menu li:nth-child(5) { transition-delay: 0.3s; }
+
+        .mobile-menu a {
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            font-weight: 500;
+            display: block;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: color 0.3s;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #FF6B35;
+        }
+
+        .mobile-actions {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mobile-actions .btn {
+            width: 100%;
+            text-align: center;
         }
 
         .nav-actions {
@@ -143,6 +251,25 @@
         .profile-icon:hover {
             background-color: #FF6B35;
             color: white;
+        }
+
+        /* Оверлей для мобильного меню */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 998;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Кнопки */
@@ -224,70 +351,75 @@
 
         /* Адаптивность */
         @media (max-width: 992px) {
-            .navbar {
-                flex-direction: column;
-                padding: 15px 0;
+            .nav-menu {
+                display: none;
             }
             
-            .nav-links {
-                margin: 15px 0;
-            }
-            
-            .nav-links li {
-                margin-left: 15px;
-                margin-right: 15px;
+            .hamburger {
+                display: flex;
+                order: 2;
             }
             
             .nav-actions {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
+                order: 3;
+            }
+            
+            .logo {
+                order: 1;
             }
             
             .search-box {
-                flex-grow: 1;
-                max-width: 300px;
-                margin-bottom: 10px;
+                display: none;
+            }
+            
+            .mobile-search {
+                display: block;
+                margin-bottom: 20px;
+            }
+            
+            .mobile-search input {
+                width: 100%;
+                padding: 12px 15px;
+                border: 1px solid #e0e0e0;
+                border-radius: 30px;
+                font-size: 16px;
             }
             
             main {
-                margin-top: 150px;
+                margin-top: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-actions .btn-admin,
+            .nav-actions .btn-outline,
+            .nav-actions .btn-primary {
+                display: none;
+            }
+            
+            .mobile-actions .btn-admin,
+            .mobile-actions .btn-outline,
+            .mobile-actions .btn-primary {
+                display: block;
+            }
+            
+            .mobile-menu {
+                width: 100%;
+                max-width: 300px;
             }
         }
 
         @media (max-width: 576px) {
-            .nav-links {
-                flex-direction: column;
-                align-items: center;
+            .logo h2 {
+                font-size: 24px;
             }
             
-            .nav-links li {
-                margin: 5px 0;
+            .mobile-menu {
+                padding: 70px 20px 20px;
             }
             
-            .nav-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .search-box {
-                margin-right: 0;
-                margin-bottom: 10px;
-                width: 100%;
-                max-width: none;
-            }
-            
-            .search-box input {
-                width: 100%;
-            }
-            
-            .search-box input:focus {
-                width: 100%;
-            }
-            
-            .btn-admin {
-                margin-right: 0;
-                margin-bottom: 10px;
+            .mobile-menu a {
+                font-size: 16px;
             }
         }
     </style>
@@ -300,44 +432,43 @@
                 <div class="logo">
                     <h2><a href="{{ url('/') }}" style="text-decoration: none;"><span class="kit">KIT</span><span class="three-d">3D</span></a></h2>
                 </div>
-                <ul class="nav-links">
+                
+                <!-- Кнопка гамбургера для мобильных -->
+                <button class="hamburger" id="hamburger" aria-label="Меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <!-- Основное меню для десктопа -->
+                <ul class="nav-menu">
                     <li><a href="{{ url('/allmodels') }}" class="{{ request()->is('allmodels') || request()->is('/') ? 'active' : '' }}">AllModels</a></li>
                     <li><a href="{{ url('/models') }}" class="{{ request()->is('models') ? 'active' : '' }}">My Models</a></li>
                     <!-- <li><a href="{{ url('/create3d') }}" class="{{ request()->is('create3d') ? 'active' : '' }}">Create3d</a></li> -->
                     <li><a href="{{ url('/about') }}" class="{{ request()->is('about') ? 'active' : '' }}">About Us</a></li>
-                    
+                    <li><a href="{{ url('/convertor') }}" class="{{ request()->is('convertor') ? 'active' : '' }}">Convertor</a></li>
+
                 </ul>
+                
                 <div class="nav-actions">
-                   
-
-
                     @auth
                         <!-- Кнопка админки - показывается только админам -->
                         @if(auth()->user()->is_admin)
                             <a href="{{ route('admin.dashboard') }}" class="btn btn-admin">
                                 <i class="fas fa-cog"></i> Админка
                             </a>
-                            
                         @endif
-
-
-
-
-
-
 
                         <div class="dropdown">
                             <button class="profile-icon dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Профиль пользователя">
                                 <i class="fas fa-user" aria-hidden="true"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-
                                 <li>
                                     <a href="{{ route('profile.edit') }}" class="dropdown-item" style="display: block; padding: 0.5rem 1rem; color: #333; text-decoration: none; transition: background-color 0.3s ease; border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
                                         <span>Профиль {{ Auth::user()->name }}</span>
                                     </a>
                                 </li>
-
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                       <form method="POST" action="{{ route('logout') }}">
@@ -354,6 +485,50 @@
                 </div>
             </nav>
         </div>
+        
+        <!-- Мобильное меню -->
+        <div class="mobile-menu" id="mobileMenu">
+            <!-- Поиск в мобильном меню -->
+            <div class="mobile-search">
+               
+            </div>
+            
+            <!-- Навигация -->
+            <ul>
+                <li><a href="{{ url('/allmodels') }}" class="{{ request()->is('allmodels') || request()->is('/') ? 'active' : '' }}">AllModels</a></li>
+                <li><a href="{{ url('/models') }}" class="{{ request()->is('models') ? 'active' : '' }}">My Models</a></li>
+                <!-- <li><a href="{{ url('/create3d') }}" class="{{ request()->is('create3d') ? 'active' : '' }}">Create3d</a></li> -->
+                <li><a href="{{ url('/about') }}" class="{{ request()->is('about') ? 'active' : '' }}">About Us</a></li>
+            </ul>
+            
+            <!-- Кнопки авторизации для мобильных -->
+            <div class="mobile-actions">
+                @auth
+                    @if(auth()->user()->is_admin)
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-admin">
+                            <i class="fas fa-cog"></i> Админка
+                        </a>
+                    @endif
+                    
+                    <!-- <a href="{{ route('profile.edit') }}" class="btn btn-outline">
+                        <i class="fas fa-user"></i> Профиль
+                    </a>
+                    
+                    <form method="POST" action="{{ route('logout') }}" style="width: 100%;">
+                        @csrf
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-out-alt"></i> Выйти
+                        </button>
+                    </form> -->
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-outline">Войти</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary">Регистрация</a>
+                @endauth
+            </div>
+        </div>
+        
+        <!-- Оверлей для мобильного меню -->
+        <div class="menu-overlay" id="menuOverlay"></div>
     </header>
 
     <main class="py-4">
@@ -382,6 +557,53 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Мобильное меню
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+            
+            // Открытие/закрытие мобильного меню
+            hamburger.addEventListener('click', function() {
+                this.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+                menuOverlay.classList.toggle('active');
+                document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+            });
+            
+            // Закрытие меню по клику на оверлей
+            menuOverlay.addEventListener('click', function() {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                this.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            // Закрытие меню по клику на ссылку (опционально)
+            const mobileLinks = document.querySelectorAll('.mobile-menu a');
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    hamburger.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                    menuOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            });
+            
+            // Адаптация размера основного контента
+            function updateMainMargin() {
+                const headerHeight = document.querySelector('header').offsetHeight;
+                document.querySelector('main').style.marginTop = headerHeight + 'px';
+            }
+            
+            // Обновляем при загрузке и изменении размера окна
+            window.addEventListener('load', updateMainMargin);
+            window.addEventListener('resize', updateMainMargin);
+        });
+    </script>
+    
     <!-- Model Viewer для 3D моделей -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     

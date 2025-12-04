@@ -16,13 +16,13 @@ Route::get('/info', function () {
     return view('models.info');
 });
 
-Route::get('/proba', function () {
-    return view('models.proba');
-});
-
 Route::get('/about', function () {
     return view('models.about');
 })->name('about');
+
+Route::get('/convertor', function () {
+    return view('models.convert');
+})->name('convertor');
 
 // ПУБЛИЧНЫЕ МАРШРУТЫ (доступны всем)
 Route::get('/allmodels', [Model3DController::class, 'allModels'])->name('models.all');
@@ -39,7 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/models/{model:slug}', [Model3DController::class, 'show'])->name('models.show');
 });
 
-// МАРШРУТЫ ДЛЯ РЕДАКТИРОВАНИЯ - только владелец
+// МАРШРУТЫ ДЛЯ РЕДАКТИРОВАНИЯ - владелец ИЛИ админ
 Route::middleware(['auth'])->group(function () {
     Route::get('/models/{model:slug}/edit', [Model3DController::class, 'edit'])
         ->name('models.edit');
@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('models.destroy');
 });
 
-// МАРШРУТЫ АДМИНА (с правами на редактирование любых моделей)
+// МАРШРУТЫ АДМИНА
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Дашборд
     Route::get('/', [Model3DController::class, 'admin'])->name('dashboard');
@@ -66,12 +66,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/users', [Model3DController::class, 'userManagement'])->name('users');
     Route::get('/users/{userId}', [Model3DController::class, 'userDetail'])->name('user.detail');
     
-    // АДМИНСКИЕ МАРШРУТЫ ДЛЯ УПРАВЛЕНИЯ МОДЕЛЯМИ
+    // АДМИНСКИЙ СПИСОК ВСЕХ МОДЕЛЕЙ (с кнопками редактирования)
     Route::get('/models', [Model3DController::class, 'adminModels'])->name('models.index');
-    Route::get('/models/{model:slug}/edit', [Model3DController::class, 'adminEdit'])->name('models.edit');
-    Route::put('/models/{model:slug}', [Model3DController::class, 'adminUpdate'])->name('models.update');
-    Route::delete('/models/{model:slug}', [Model3DController::class, 'adminDestroy'])->name('models.destroy');
-    Route::get('/models/{model:slug}', [Model3DController::class, 'adminShow'])->name('models.show');
 });
 
 // ПРОФИЛЬ

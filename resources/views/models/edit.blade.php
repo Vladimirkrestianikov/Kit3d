@@ -224,6 +224,12 @@
                             </a>
                         </div>
                     </form>
+                    
+                    <!-- Форма для удаления -->
+                    <form id="deleteForm" action="{{ route('models.destroy', $model) }}" method="POST" style="display: none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
                 </div>
             </div>
         </div>

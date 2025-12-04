@@ -178,7 +178,7 @@
         <div class="preview-panel">
             <!-- Заголовок и кнопки экспорта в одной строке -->
             <div class="preview-header">
-                <div class="preview-title">3D Просмотр</div>
+                <div class="preview-title">Доступные форматы  </div>
                 <div class="export-buttons">
                     <button id="downloadGLTF">GLTF</button>
                     <button id="downloadGLB">GLB</button>
