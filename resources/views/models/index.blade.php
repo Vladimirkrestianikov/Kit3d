@@ -28,8 +28,8 @@
             </a>
             <br>
              <a href="{{ route('models.create3d') }}" class="btn btn-primary btn-add-model">
-                <i class="fas fa-plus"></i>
-                сгенерировать
+                <i class="fas fa-plusa"></i>
+                3D Текст
             </a>
             <br>
              

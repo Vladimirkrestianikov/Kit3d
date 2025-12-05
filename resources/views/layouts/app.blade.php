@@ -455,7 +455,7 @@
                         <!-- Кнопка админки - показывается только админам -->
                         @if(auth()->user()->is_admin)
                             <a href="{{ route('admin.dashboard') }}" class="btn btn-admin">
-                                <i class="fas fa-cog"></i> Админка
+                                <i class="fas fa-cog"></i> Admin panel
                             </a>
                         @endif
 

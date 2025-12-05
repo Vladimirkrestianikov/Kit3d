@@ -321,38 +321,86 @@ class Model3DController extends Controller
         return view('models.create3d');
     }
 
-    public function destroy(Model3D $model)
-    {
-        // Проверяем, имеет ли пользователь доступ к удалению
-        if (!$this->canEditModel($model)) {
-            abort(403, 'У вас нет прав для удаления этой модели.');
+   public function destroy(Model3D $model)
+{
+    // Проверяем, имеет ли пользователь доступ к удалению
+    if (!$this->canEditModel($model)) {
+        abort(403, 'У вас нет прав для удаления этой модели.');
+    }
+
+    try {
+        // ========== УДАЛЯЕМ ВСЕ ФАЙЛЫ ==========
+        
+        // 1. Удаляем оригинальное изображение
+        if ($model->image_path && Storage::disk('public')->exists($model->image_path)) {
+            Storage::disk('public')->delete($model->image_path);
+            
+            // 2. Удаляем возможные превьюшки (если используешь intervention/image)
+            $pathInfo = pathinfo($model->image_path);
+            $directory = $pathInfo['dirname'];
+            $filename = $pathInfo['filename'];
+            $extension = $pathInfo['extension'];
+            
+            // Проверяем все возможные варианты превью
+            $possibleThumbnails = [
+                $directory . '/thumbs/' . $filename . '.' . $extension,
+                $directory . '/thumbnails/' . $filename . '.' . $extension,
+                $directory . '/' . $filename . '_thumb.' . $extension,
+                $directory . '/' . $filename . '_small.' . $extension,
+                $directory . '/' . $filename . '_medium.' . $extension,
+                $directory . '/' . $filename . '_large.' . $extension,
+                $directory . '/cache/' . $filename . '.' . $extension,
+            ];
+            
+            foreach ($possibleThumbnails as $thumbnail) {
+                if (Storage::disk('public')->exists($thumbnail)) {
+                    Storage::disk('public')->delete($thumbnail);
+                }
+            }
         }
 
-        try {
-            // Удаляем файлы из хранилища
-            Storage::disk('public')->delete($model->image_path);
+        // 3. Удаляем 3D модель
+        if ($model->model_path && Storage::disk('public')->exists($model->model_path)) {
             Storage::disk('public')->delete($model->model_path);
             
-            // Удаляем запись из базы
-            $model->delete();
-
-            // Если удаляет админ - возвращаем на админ-панель
-            if (auth()->user()->is_admin && request()->has('from_admin')) {
-                return redirect()->route('admin.dashboard')->with('success', 'Модель успешно удалена!');
+            // 4. Если есть дополнительные файлы для 3D моделей (текстуры и т.д.)
+            $modelDir = dirname($model->model_path);
+            $modelName = pathinfo($model->model_path, PATHINFO_FILENAME);
+            
+            // Проверяем связанные файлы
+            $relatedFiles = [
+                $modelDir . '/' . $modelName . '.mtl',  // для .obj файлов
+                $modelDir . '/' . $modelName . '.jpg',
+                $modelDir . '/' . $modelName . '.png',
+                $modelDir . '/' . $modelName . '.bin',   // для .gltf
+                $modelDir . '/' . $modelName . '_texture.png',
+            ];
+            
+            foreach ($relatedFiles as $file) {
+                if (Storage::disk('public')->exists($file)) {
+                    Storage::disk('public')->delete($file);
+                }
             }
-
-            // Если удаляет обычный пользователь - возвращаем на его страницу
-            return redirect()->route('models.index')->with('success', 'Модель успешно удалена!');
-
-        } catch (\Exception $e) {
-            // Если ошибка и пользователь админ - возвращаем на админ-панель
-            if (auth()->user()->is_admin && request()->has('from_admin')) {
-                return redirect()->route('admin.dashboard')->with('error', 'Ошибка при удалении: ' . $e->getMessage());
-            }
-
-            return back()->with('error', 'Ошибка при удалении: ' . $e->getMessage());
         }
+        
+        // 5. Удаляем запись из базы
+        $model->delete();
+
+        // Редирект в зависимости от пользователя
+        if (auth()->user()->is_admin && request()->has('from_admin')) {
+            return redirect()->route('admin.dashboard')->with('success', 'Модель успешно удалена!');
+        }
+
+        return redirect()->route('models.index')->with('success', 'Модель успешно удалена!');
+
+    } catch (\Exception $e) {
+        if (auth()->user()->is_admin && request()->has('from_admin')) {
+            return redirect()->route('admin.dashboard')->with('error', 'Ошибка при удалении: ' . $e->getMessage());
+        }
+
+        return back()->with('error', 'Ошибка при удалении: ' . $e->getMessage());
     }
+}
 
     public function allModels()
     {

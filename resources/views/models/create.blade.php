@@ -42,10 +42,11 @@
 
                             <div class="form-group">
                                 <label for="price" class="form-label">Цена ($) *</label>
-                                <input type="number" class="form-input @error('price') is-invalid @enderror" 
+                                <input type="text" class="form-input @error('price') is-invalid @enderror" 
                                        id="price" name="price" value="{{ old('price') }}" 
-                                       min="0" max="10000" step="0.01" required
-                                       placeholder="0.00">
+                                       required placeholder="0.00"
+                                       inputmode="decimal">
+                                <div class="form-hint">Только цифры и точка (например: 99.99)</div>
                                 @error('price')
                                     <div class="form-error">{{ $message }}</div>
                                 @enderror
@@ -417,6 +418,13 @@
 .is-invalid + .file-upload-area {
     border-color: #dc3545 !important;
 }
+
+.price-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: none;
+}
 </style>
 
 <script>
@@ -431,6 +439,175 @@ document.addEventListener('DOMContentLoaded', function() {
     const telegramInput = document.getElementById('telegram');
     const imageUploadArea = document.getElementById('imageUploadArea');
     const modelUploadArea = document.getElementById('modelUploadArea');
+    const priceInput = document.getElementById('price');
+
+    // ВАЛИДАЦИЯ ЦЕНЫ - ОСНОВНАЯ ФУНКЦИЯ
+    function validatePrice(input) {
+        let value = input.value;
+        
+        // Удаляем все символы кроме цифр и точки
+        value = value.replace(/[^0-9.]/g, '');
+        
+        // Удаляем лишние точки (оставляем только первую)
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Ограничиваем до 2 знаков после запятой
+        if (parts.length === 2 && parts[1].length > 2) {
+            value = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        
+        // Если первая точка, добавляем 0 перед ней
+        if (value.startsWith('.')) {
+            value = '0' + value;
+        }
+        
+        // Не позволяем вводить больше 10 знаков до точки
+        if (parts[0].length > 10) {
+            value = parts[0].substring(0, 10) + (parts[1] ? '.' + parts[1] : '');
+        }
+        
+        input.value = value;
+        return value;
+    }
+
+    // Обработка ввода цены
+    priceInput.addEventListener('input', function(e) {
+        validatePrice(this);
+    });
+
+    // Обработка вставки цены
+    priceInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        
+        // Получаем текст из буфера обмена
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        
+        // Проверяем, является ли вставленное значение числом
+        if (!isNaN(parseFloat(pastedText)) && isFinite(pastedText)) {
+            // Если это число, вставляем его
+            this.value = parseFloat(pastedText).toFixed(2);
+        } else {
+            // Если не число, очищаем поле
+            this.value = '';
+            showPriceError('Можно вводить только цифры и точку');
+        }
+    });
+
+    // Проверка цены при отправке формы
+    form.addEventListener('submit', function(e) {
+        const priceValue = priceInput.value.trim();
+        
+        if (!priceValue) {
+            e.preventDefault();
+            showPriceError('Введите цену');
+            priceInput.focus();
+            return false;
+        }
+        
+        const priceNum = parseFloat(priceValue);
+        
+        if (isNaN(priceNum)) {
+            e.preventDefault();
+            showPriceError('Неверный формат цены');
+            priceInput.focus();
+            return false;
+        }
+        
+        if (priceNum < 0) {
+            e.preventDefault();
+            showPriceError('Цена не может быть отрицательной');
+            priceInput.focus();
+            return false;
+        }
+        
+        if (priceNum > 10000) {
+            e.preventDefault();
+            showPriceError('Цена не может превышать 10,000$');
+            priceInput.focus();
+            return false;
+        }
+        
+        // Форматируем цену до 2 знаков после запятой
+        priceInput.value = priceNum.toFixed(2);
+        
+        // Остальные проверки...
+        const modelFile = modelFileInput.files[0];
+        const imageFile = imageFileInput.files[0];
+        const category = document.querySelector('input[name="category"]:checked');
+        
+        // Проверка категории
+        if (!category) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите категорию для модели');
+            return false;
+        }
+
+        // Проверка номера телефона
+        const phoneRegex = /^8[0-9]{10}$/;
+        if (!phoneRegex.test(phoneInput.value)) {
+            e.preventDefault();
+            alert('Введите корректный казахстанский номер телефона (8XXXXXXXXXX)');
+            phoneInput.focus();
+            return false;
+        }
+
+        // Проверка email
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(emailInput.value)) {
+            e.preventDefault();
+            alert('Введите корректный email адрес');
+            emailInput.focus();
+            return false;
+        }
+
+        // Проверка Telegram
+        const telegramRegex = /^(@[a-zA-Z0-9_]{5,32}|[a-zA-Z0-9_]{5,32})$/;
+        if (!telegramRegex.test(telegramInput.value)) {
+            e.preventDefault();
+            alert('Введите корректный Telegram username (5-32 символа, только буквы, цифры и _)');
+            telegramInput.focus();
+            return false;
+        }
+
+        // Проверка файлов
+        if (modelFile && modelFile.size > 100 * 1024 * 1024) {
+            e.preventDefault();
+            alert('Файл 3D модели слишком большой! Максимальный размер: 100MB');
+            return false;
+        }
+        
+        if (imageFile && imageFile.size > 2 * 1024 * 1024) {
+            e.preventDefault();
+            alert('Изображение слишком большое! Максимальный размер: 2MB');
+            return false;
+        }
+        
+        // Блокируем кнопку отправки
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+    });
+
+    // Функция показа ошибки цены
+    function showPriceError(message) {
+        // Создаем элемент ошибки если его нет
+        let errorElement = document.querySelector('.price-error');
+        if (!errorElement) {
+            errorElement = document.createElement('div');
+            errorElement.className = 'price-error';
+            priceInput.parentNode.appendChild(errorElement);
+        }
+        
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        
+        // Автоматически скрываем ошибку через 5 секунд
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
+    }
 
     // Drag and drop functionality
     [imageUploadArea, modelUploadArea].forEach((area, index) => {
@@ -527,62 +704,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = value;
     });
 
-    // Проверка перед отправкой
-    form.addEventListener('submit', function(e) {
-        const modelFile = modelFileInput.files[0];
-        const imageFile = imageFileInput.files[0];
-        const category = document.querySelector('input[name="category"]:checked');
-        
-        // Проверка категории
-        if (!category) {
-            e.preventDefault();
-            alert('Пожалуйста, выберите категорию для модели');
-            return false;
+    // Убираем ошибку цены при фокусе
+    priceInput.addEventListener('focus', function() {
+        const errorElement = document.querySelector('.price-error');
+        if (errorElement) {
+            errorElement.style.display = 'none';
         }
-
-        // Проверка номера телефона
-        const phoneRegex = /^8[0-9]{10}$/;
-        if (!phoneRegex.test(phoneInput.value)) {
-            e.preventDefault();
-            alert('Введите корректный казахстанский номер телефона (8XXXXXXXXXX)');
-            phoneInput.focus();
-            return false;
-        }
-
-        // Проверка email
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(emailInput.value)) {
-            e.preventDefault();
-            alert('Введите корректный email адрес');
-            emailInput.focus();
-            return false;
-        }
-
-        // Проверка Telegram
-        const telegramRegex = /^(@[a-zA-Z0-9_]{5,32}|[a-zA-Z0-9_]{5,32})$/;
-        if (!telegramRegex.test(telegramInput.value)) {
-            e.preventDefault();
-            alert('Введите корректный Telegram username (5-32 символа, только буквы, цифры и _)');
-            telegramInput.focus();
-            return false;
-        }
-
-        // Проверка файлов
-        if (modelFile && modelFile.size > 100 * 1024 * 1024) {
-            e.preventDefault();
-            alert('Файл 3D модели слишком большой! Максимальный размер: 100MB');
-            return false;
-        }
-        
-        if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-            e.preventDefault();
-            alert('Изображение слишком большое! Максимальный размер: 2MB');
-            return false;
-        }
-        
-        // Блокируем кнопку отправки
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
     });
 });
 </script>
